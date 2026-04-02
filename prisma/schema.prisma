@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── PRESTADORES ──────────────────────────────────────────────
+model Provider {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  phone         String?
+  specialty     String
+  bio           String?        @db.Text
+  avatarUrl     String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  services      Service[]
+  schedules     Schedule[]
+  blockedDates  BlockedDate[]
+  appointments  Appointment[]
+
+  @@map("providers")
+}
+
+// ── SERVICIOS ────────────────────────────────────────────────
+model Service {
+  id            String         @id @default(cuid())
+  providerId    String
+  name          String
+  description   String?        @db.Text
+  durationMin   Int
+  price         Decimal        @db.Decimal(10, 2)
+  depositAmount Decimal        @db.Decimal(10, 2)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  provider      Provider       @relation(fields: [providerId], references: [id])
+  appointments  Appointment[]
+
+  @@map("services")
+}
+
+// ── HORARIOS RECURRENTES ─────────────────────────────────────
+model Schedule {
+  id            String         @id @default(cuid())
+  providerId    String
+  dayOfWeek     Int
+  startTime     String
+  endTime       String
+  slotInterval  Int            @default(30)
+  isActive      Boolean        @default(true)
+
+  provider      Provider       @relation(fields: [providerId], references: [id])
+
+  @@unique([providerId, dayOfWeek, startTime])
+  @@map("schedules")
+}
+
+// ── FECHAS BLOQUEADAS ────────────────────────────────────────
+model BlockedDate {
+  id            String         @id @default(cuid())
+  providerId    String
+  date          DateTime       @db.Date
+  reason        String?
+  createdAt     DateTime       @default(now())
+
+  provider      Provider       @relation(fields: [providerId], references: [id])
+
+  @@unique([providerId, date])
+  @@map("blocked_dates")
+}
+
+// ── CITAS ────────────────────────────────────────────────────
+model Appointment {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  providerId      String
+  serviceId       String
+  status          AppointmentStatus @default(PENDING_PAYMENT)
+
+  dateTime        DateTime
+  durationMin     Int
+
+  patientName     String
+  patientEmail    String
+  patientPhone    String
+  patientNotes    String?           @db.Text
+
+  lockedUntil     DateTime?
+
+  depositAmount   Decimal           @db.Decimal(10, 2)
+
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelledBy     String?
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  provider        Provider          @relation(fields: [providerId], references: [id])
+  service         Service           @relation(fields: [serviceId], references: [id])
+  payment         Payment?
+  emailLogs       EmailLog[]
+
+  @@index([patientEmail])
+  @@index([dateTime])
+  @@index([status, lockedUntil])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  EXPIRED
+}
+
+// ── PAGOS ────────────────────────────────────────────────────
+model Payment {
+  id                String        @id @default(cuid())
+  appointmentId     String        @unique
+  stripePaymentId   String?       @unique
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("MXN")
+  status            PaymentStatus @default(PENDING)
+  refundedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  appointment       Appointment   @relation(fields: [appointmentId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ── LOG DE EMAILS ────────────────────────────────────────────
+model EmailLog {
+  id              String       @id @default(cuid())
+  appointmentId   String
+  recipientEmail  String
+  type            EmailType
+  status          String
+  sentAt          DateTime     @default(now())
+
+  appointment     Appointment  @relation(fields: [appointmentId], references: [id])
+
+  @@map("email_logs")
+}
+
+enum EmailType {
+  CONFIRMATION_PATIENT
+  CONFIRMATION_PROVIDER
+  REMINDER_24H
+  CANCELLATION_PATIENT
+  CANCELLATION_PROVIDER
+}
+
+// ── USUARIOS ADMIN ───────────────────────────────────────────
+model AdminUser {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  role          String   @default("admin")
+  providerId    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("admin_users")
+}
