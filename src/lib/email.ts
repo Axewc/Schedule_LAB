@@ -97,7 +97,7 @@ export async function sendConfirmationEmails(appointment: AppointmentEmailData) 
     await logEmail(appointment.id, doctorEmail, EmailType.CONFIRMATION_PROVIDER, "sent");
   } catch (error) {
     console.error("Error sending provider confirmation email:", error);
-    await logEmail(appointment.id, appointment.provider.email, EmailType.CONFIRMATION_PROVIDER, "failed");
+    await logEmail(appointment.id, appointment.provider.email ?? DOCTOR_EMAIL, EmailType.CONFIRMATION_PROVIDER, "failed");
   }
 }
 
@@ -185,6 +185,6 @@ export async function sendCancellationEmails(appointment: AppointmentEmailData, 
     await logEmail(appointment.id, doctorEmail, EmailType.CANCELLATION_PROVIDER, "sent");
   } catch (error) {
     console.error("Error sending cancellation provider email:", error);
-    await logEmail(appointment.id, appointment.provider.email, EmailType.CANCELLATION_PROVIDER, "failed");
+    await logEmail(appointment.id, appointment.provider.email ?? DOCTOR_EMAIL, EmailType.CANCELLATION_PROVIDER, "failed");
   }
 }

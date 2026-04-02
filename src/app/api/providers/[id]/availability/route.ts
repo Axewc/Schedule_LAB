@@ -98,13 +98,13 @@ export async function GET(
     let current = new Date(startDateTime);
     const now = new Date();
 
-    while (isBefore(addMinutes(current, durationMin), endDateTime) || 
-           addMinutes(current, durationMin).getTime() === endDateTime.getTime()) {
-      const slotEnd = addMinutes(current, durationMin);
+    let slotEnd = addMinutes(current, durationMin);
+    while (isBefore(slotEnd, endDateTime) || slotEnd.getTime() === endDateTime.getTime()) {
 
       // Skip past slots
       if (isBefore(current, now)) {
         current = addMinutes(current, schedule.slotInterval);
+        slotEnd = addMinutes(current, durationMin);
         continue;
       }
 
@@ -131,6 +131,7 @@ export async function GET(
       });
 
       current = addMinutes(current, schedule.slotInterval);
+      slotEnd = addMinutes(current, durationMin);
     }
 
     return NextResponse.json(slots);
