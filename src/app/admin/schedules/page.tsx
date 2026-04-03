@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
@@ -6,6 +8,9 @@ import { Clock } from "lucide-react";
 const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export default async function SchedulesPage() {
+  const session = await auth();
+  if (!session) redirect("/admin/login");
+
   const schedules = await prisma.schedule.findMany({
     include: { provider: { select: { name: true } } },
     orderBy: [{ providerId: "asc" }, { dayOfWeek: "asc" }],

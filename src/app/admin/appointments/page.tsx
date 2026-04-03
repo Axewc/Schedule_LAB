@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
@@ -14,6 +16,9 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "succe
 };
 
 export default async function AppointmentsPage() {
+  const session = await auth();
+  if (!session) redirect("/admin/login");
+
   const appointments = await prisma.appointment.findMany({
     include: {
       service: { select: { name: true } },

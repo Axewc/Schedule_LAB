@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 
 export default async function ProvidersPage() {
+  const session = await auth();
+  if (!session) redirect("/admin/login");
+
   const providers = await prisma.provider.findMany({
     include: { _count: { select: { appointments: true, services: true } } },
     orderBy: { createdAt: "desc" },

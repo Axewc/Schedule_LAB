@@ -379,7 +379,7 @@ En el panel de configuración del proyecto de Vercel, **antes de hacer el primer
 Variables críticas a configurar:
 
 | Variable | Entorno |
-|---|---|
+| --- | --- |
 | `DATABASE_URL` | Production, Preview, Development |
 | `DIRECT_URL` | Production, Preview, Development |
 | `AUTH_SECRET` | Production, Preview, Development |

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, DollarSign, CheckCircle, Clock } from "lucide-react";
@@ -15,6 +17,9 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "succe
 };
 
 export default async function DashboardPage() {
+  const session = await auth();
+  if (!session) redirect("/admin/login");
+
   const now = new Date();
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);

@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { AdminNav } from "@/components/admin/admin-nav";
 
 export default async function AdminLayout({
@@ -9,8 +8,9 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
 
+  // If not authenticated, render children directly (login page handles its own UI)
   if (!session) {
-    redirect("/admin/login");
+    return <>{children}</>;
   }
 
   return (
